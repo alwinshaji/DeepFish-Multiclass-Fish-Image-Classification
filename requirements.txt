@@ -1,5 +1,9 @@
-streamlit==1.29.0
-tensorflow==2.15.0
-numpy==1.24.3
-pillow==10.0.1
+streamlit==1.48.0
+tensorflow==2.19.0
+keras==3.10.0
+numpy
+pandas
+matplotlib
+Pillow
+scikit-learn
 gdown
