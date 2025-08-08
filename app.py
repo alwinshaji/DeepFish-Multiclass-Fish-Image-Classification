@@ -1,64 +1,69 @@
 import streamlit as st
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
 import numpy as np
+import tensorflow as tf
+import gdown
+import os
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from PIL import Image
 
-# Set the page title and layout
-st.set_page_config(page_title="DeepFish - Fish Image Classifier", layout="centered")
-
-# Load model
-@st.cache_resource
-def load_cnn_model():
-    return load_model("models/efficientnet_model.h5")
-
-model = load_cnn_model()
+# Set title
+st.set_page_config(page_title="DeepFish 🐟", layout="centered")
+st.title("🐟 DeepFish: Fish Image Classifier")
+st.write("Upload a fish image to identify its category.")
 
 # Class labels
 class_labels = [
-    "Animal Fish",
-    "Black Sea Sprat",
-    "Trout",
-    "Shrimp",
-    "Gilt Head Bream",
-    "Sea Bass",
-    "Red Mullet",
-    "Red Sea Bream",
-    "Horse Mackerel",
-    "Striped Red Mullet",
-    "Bass"
+    "animal_fish",
+    "fish_sea_food_black_sea_sprat",
+    "fish_sea_food_trout",
+    "fish_sea_food_shrimp",
+    "fish_sea_food_gilt_head_bream",
+    "fish_sea_food_sea_bass",
+    "fish_sea_food_red_mullet",
+    "fish_sea_food_red_sea_bream",
+    "fish_sea_food_hourse_mackerel",
+    "fish_sea_food_striped_red_mullet",
+    "animal_fish_bass"
 ]
 
-# Image preprocessing
-def preprocess_image(uploaded_file):
-    img = Image.open(uploaded_file).convert("RGB")
-    img = img.resize((224, 224))
-    img_array = image.img_to_array(img)
-    img_array = img_array / 255.0  # Normalize
-    img_array = np.expand_dims(img_array, axis=0)
-    return img_array
+# Function to download model from Google Drive
+def download_model():
+    file_id = '1Mq7y85ZHaciK1_6KzVPv-X9FLVAxJMKh'  # Replace with your correct file ID
+    model_path = 'densenet_finetuned.h5'
+    if not os.path.exists(model_path):
+        gdown.download(f'https://drive.google.com/uc?id={file_id}', model_path, quiet=False)
+    return model_path
+
+# Load model
+@st.cache_resource
+def load_fish_model():
+    model_file = download_model()
+    model = load_model(model_file)
+    return model
+
+model = load_fish_model()
 
 # Prediction function
-def predict(image_array):
-    predictions = model.predict(image_array)[0]
+def predict_image(image: Image.Image):
+    image = image.resize((224, 224))  # Adjust size based on your model
+    img_array = img_to_array(image) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
+    predictions = model.predict(img_array)
     predicted_index = np.argmax(predictions)
-    confidence = predictions[predicted_index]
-    return class_labels[predicted_index], confidence
+    predicted_class = class_labels[predicted_index]
+    confidence = predictions[0][predicted_index]
+    return predicted_class, confidence
 
-# UI
-st.title("🐟 DeepFish")
-st.subheader("Multiclass Fish Image Classifier")
+# File uploader
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
-uploaded_file = st.file_uploader("Upload a fish image", type=["jpg", "jpeg", "png"])
+if uploaded_file is not None:
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Uploaded Image", use_column_width=True)
 
-if uploaded_file:
-    try:
-        st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
-        with st.spinner("Classifying..."):
-            processed_image = preprocess_image(uploaded_file)
-            label, confidence = predict(processed_image)
-            st.success(f"**Prediction:** {label}")
-            st.info(f"**Confidence:** {confidence:.2%}")
-    except Exception as e:
-        st.error("Something went wrong. Please upload a valid fish image.")
-        st.text(f"Error: {str(e)}")
+    with st.spinner("Predicting..."):
+        label, confidence = predict_image(image)
+
+    st.markdown(f"### 🧠 Prediction: `{label}`")
+    st.markdown(f"### 🔍 Confidence: `{confidence:.2f}`")
