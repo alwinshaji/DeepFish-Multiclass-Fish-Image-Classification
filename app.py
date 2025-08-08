@@ -3,13 +3,15 @@ import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 from PIL import Image
-import tempfile
 import gdown
 import os
 
+# Page setup
 st.set_page_config(page_title="DeepFish", layout="centered")
-st.title("🐟 DeepFish - Multiclass Fish Image Classifier")
+st.markdown("<h1 style='text-align: center;'>🐟 DeepFish</h1>", unsafe_allow_html=True)
+st.markdown("<h4 style='text-align: center; color: gray;'>Multiclass Fish Image Classifier</h4>", unsafe_allow_html=True)
 
+# Class labels
 CLASS_NAMES = {
     "animal_fish_bass": "animal fish bass",
     "fish_sea_food_black_sea_sprat": "fish sea_food black_sea_sprat",
@@ -23,12 +25,11 @@ CLASS_NAMES = {
     "fish_sea_food_trout": "fish sea_food trout"
 }
 
-# Download model from Google Drive if not already downloaded
+# Download model from Google Drive
 @st.cache_resource
 def load_fish_model():
     model_path = "densenet_finetuned.h5"
     if not os.path.exists(model_path):
-        # Replace this with YOUR Google Drive shareable file ID
         file_id = "1Mq7y85ZHaciK1_6KzVPv-X9FLVAxJMKh"
         url = f"https://drive.google.com/uc?id={file_id}"
         gdown.download(url, model_path, quiet=False)
@@ -37,23 +38,31 @@ def load_fish_model():
 
 model = load_fish_model()
 
-# Image upload
-uploaded_file = st.file_uploader("Upload a fish image", type=["jpg", "jpeg", "png"])
+# Upload image
+st.markdown("---")
+uploaded_file = st.file_uploader("📤 Upload a fish image (JPG, PNG)", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     img = Image.open(uploaded_file).convert("RGB")
-    st.image(img, caption="Uploaded Image", use_column_width=True)
+    st.image(img, caption="📷 Uploaded Image", use_container_width=True)
 
-    # Preprocess the image
-    img = img.resize((224, 224))
-    img_array = image.img_to_array(img)
-    img_array = np.expand_dims(img_array, axis=0)
-    img_array = img_array / 255.0
+    with st.spinner("Analyzing image..."):
+        # Preprocessing
+        img = img.resize((224, 224))
+        img_array = image.img_to_array(img)
+        img_array = np.expand_dims(img_array, axis=0)
+        img_array = img_array / 255.0
 
-    # Predict
-    prediction = model.predict(img_array)
-    predicted_class = CLASS_NAMES[np.argmax(prediction)]
-    confidence = np.max(prediction) * 100
+        # Prediction
+        prediction = model.predict(img_array)
+        predicted_key = list(CLASS_NAMES.keys())[np.argmax(prediction)]
+        predicted_class = CLASS_NAMES[predicted_key]
+        confidence = np.max(prediction) * 100
 
-    st.markdown(f"### 🎯 Prediction: `{predicted_class}`")
-    st.markdown(f"### 🔍 Confidence: `{confidence:.2f}%`")
+    st.success("✅ Prediction complete!")
+    st.markdown(f"<h3>🎯 Predicted Class: <span style='color:#4CAF50'>{predicted_class}</span></h3>", unsafe_allow_html=True)
+    st.markdown(f"<h4>🔍 Confidence: <span style='color:#2196F3'>{confidence:.2f}%</span></h4>", unsafe_allow_html=True)
+
+# Footer
+st.markdown("---")
+st.caption("Built with ❤️ using Streamlit and TensorFlow")
