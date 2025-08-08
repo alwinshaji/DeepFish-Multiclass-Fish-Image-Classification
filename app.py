@@ -10,7 +10,7 @@ import os
 st.set_page_config(page_title="DeepFish", layout="centered")
 st.title("🐟 DeepFish - Multiclass Fish Image Classifier")
 
-display_names = {
+class_names = {
     "animal_fish_bass": "animal fish bass",
     "fish_sea_food_black_sea_sprat": "fish sea_food black_sea_sprat",
     "fish_sea_food_gilt_head_bream": "fish sea_food gilt_head_bream",
