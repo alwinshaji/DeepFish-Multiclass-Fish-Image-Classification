@@ -28,9 +28,9 @@ CLASS_NAMES = {
 # Download model from Google Drive
 @st.cache_resource
 def load_fish_model():
-    model_path = "densenet_finetuned.h5"
+    model_path = "fine_tuned_fish_model.h5"
     if not os.path.exists(model_path):
-        file_id = "1Mq7y85ZHaciK1_6KzVPv-X9FLVAxJMKh"
+        file_id = "1JaED2j1HjifDV82M9haFbmTu8thUlbn3"
         url = f"https://drive.google.com/uc?id={file_id}"
         gdown.download(url, model_path, quiet=False)
     model = load_model(model_path)
